@@ -4,3 +4,6 @@ node_modules/
 ## Compiled files ##
 public/transpiled
 public/app.js
+
+newrelic.js
+*.log
