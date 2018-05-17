@@ -7,3 +7,6 @@ public/app.js
 
 newrelic.js
 *.log
+
+public/services/*.js
+templates/services/*.js

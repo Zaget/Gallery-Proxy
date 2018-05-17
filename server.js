@@ -5,6 +5,12 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const cluster = require('cluster');
 const os = require('os');
+const loader = require('./loader');
+const React = require('react');
+const ReactDom = require('react-dom/server');
+const Layout = require('./templates/layout');
+const App = require('./templates/app');
+const Scripts = require('./templates/scripts');
 
 if (cluster.isMaster) {
   const numWorkers = os.cpus().length;
@@ -34,11 +40,27 @@ if (cluster.isMaster) {
 
   app.use(bodyParser.json());
 
+  const clientBundles = './public/services';
+  const serverBundles = './templates/services';
+  const serviceConfig = require('./service-config.json');
+  const services = loader(clientBundles, serverBundles, serviceConfig);
+
+  const renderComponents = components => (
+    Object.keys(components).map((item) => {
+      const component = React.createElement(components[item]);
+      return ReactDom.renderToString(component);
+    })
+  );
 
   app.use('/restaurants', express.static(path.join(__dirname, './public')));
 
   app.get('/restaurants/:id', (req, res) => {
-    res.sendFile(path.join(__dirname, './public/index.html'));
+    const components = renderComponents(services);
+    res.send(Layout(
+      'Zaget',
+      App(...components),
+      Scripts(Object.keys(services)),
+    ));
   });
 
   app.use(express.static(path.join(__dirname, './public')));
